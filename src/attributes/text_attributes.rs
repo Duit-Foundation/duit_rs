@@ -1,5 +1,4 @@
-use value_ref_holder_macro::with_refs;
-use into_cow_macro::into_cow;
+use duit_macro::{into_cow, with_refs};
 use serde::Serialize;
 
 use crate::properties::{FontWeight, TextDirection};
@@ -8,17 +7,30 @@ use crate::properties::{FontWeight, TextDirection};
 #[into_cow]
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TextAttributes {
-    pub data: String,
+pub struct TextAttributes<'a> {
+    data: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub text_direction: Option<TextDirection>,
+    text_direction: Option<TextDirection>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub font_weight: Option<FontWeight>,
+    font_weight: Option<FontWeight>,
 }
 
-impl TextAttributes {
+impl<'a> TextAttributes<'a> {
+    pub const fn c_new() -> Self {
+        Self {
+            data: "",
+            text_direction: None,
+            font_weight: None,
+            refs: vec![],
+        }
+    }
     /// Устанавливает значение поля data и возвращает владеющий объект
-    pub fn data(mut self, value: String) -> Self {
+    pub fn data(mut self, value: &'a str) -> Self {
+        self.data = value;
+        self
+    }
+
+    pub const fn c_data(mut self, value: &'a str) -> Self {
         self.data = value;
         self
     }
@@ -29,8 +41,17 @@ impl TextAttributes {
         self
     }
 
-    /// Устанавливает значение поля font_weight и возвращает владеющий объект
+    pub const fn c_text_direction(mut self, value: TextDirection) -> Self {
+        self.text_direction = Some(value);
+        self
+    }
+
     pub fn font_weight(mut self, value: FontWeight) -> Self {
+        self.font_weight = Some(value);
+        self
+    }
+
+    pub const fn c_font_weight(mut self, value: FontWeight) -> Self {
         self.font_weight = Some(value);
         self
     }

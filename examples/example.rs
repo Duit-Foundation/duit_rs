@@ -1,47 +1,49 @@
-use duit_rs::{attributes, properties, widgets::{DuitWidget, WidgetJson}};
-use value_ref_holder_macro::with_refs;
+use duit_rs::{
+    attributes::*,
+    properties,
+    widgets::{DuitJsonWidget, DuitWidget},
+};
 
-// Пример использования атрибут макроса #[with_refs]
-// Этот макрос автоматически добавляет поле `pub refs: Vec<u8>` к структуре
-#[with_refs]
-#[derive(Debug, Clone)]
-struct MyStruct {
-    pub data: String,
-    pub count: i32,
-}
+// Пример конфигурации виджета, которая будет просчитана на этапе компиляции
+const TEXT_WIDGET: DuitWidget<'static> = DuitWidget::c_text(
+    "LITERAL",
+    false,
+    TextAttributes::c_new()
+        .c_data("Literal data")
+        .c_text_direction(properties::TextDirection::Ltr),
+);
 
 fn main() {
-    // Использование структуры с атрибут макросом
-    let mut my_struct = MyStruct::new();
-    my_struct.data = "Hello".to_string();
-    my_struct.count = 42;
-    my_struct.add_ref(1);
-    my_struct.add_ref(2);
-    my_struct.add_ref(3);
-
-    println!("MyStruct: {:?}", my_struct);
-    println!("Refs: {:?}", my_struct.refs());
-
-    // Пример 1: Использование временного значения (без явного биндинга)
+    // Пример 1: Использование рантайм варианта виджетов
     let container = DuitWidget::container(
-        String::from("container"),
+        "123",
         false,
-        DuitWidget::text(
-            String::from("text"),
-            false,
-            attributes::TextAttributes::new().font_weight(properties::FontWeight::W300),
-        ),
+        ContainerAttributes::new(),
+        TEXT_WIDGET, // const-виджеты могут быть использованы в рантайм-контексте
     );
-    let widget_json: WidgetJson = container.into();
-    let json = serde_json::to_string(&widget_json).unwrap();
-    println!("Пример 1 (временное значение):\n{}", json);
+    let widget_json: DuitJsonWidget = container.into();
+    let json = serde_json::to_string_pretty(&widget_json).unwrap();
+    println!("{}", json);
 
     // Пример 2: Переиспользование атрибутов через ссылку
-    let attr = attributes::TextAttributes::new().font_weight(properties::FontWeight::W300);
-    let widget1 = DuitWidget::text(String::from("text1"), false, &attr);
-    let widget2 = DuitWidget::text(String::from("text2"), false, &attr);
-    let row = DuitWidget::row(String::from("row"), false, vec![widget1, widget2]);
-    let widget_json2: WidgetJson = row.into();
-    let json2 = serde_json::to_string(&widget_json2).unwrap();
-    println!("\nПример 2 (переиспользование):\n{}", json2);
+
+    // Создаем атрибуты для виджетов, которые хотим переиспользовать
+    let attr = &TextAttributes::new().font_weight(properties::FontWeight::W300);
+
+    // Создаем виджеты, используя переиспользуемые атрибуты
+    let widget1 = DuitWidget::text("text1", false, attr);
+    let widget2 = DuitWidget::text("text2", false, attr);
+    let widget3 = DuitWidget::text(
+        "text3",
+        true,
+        TextAttributes::new().font_weight(properties::FontWeight::W300),
+    );
+
+    // Создаем multichild-виджет
+    let row = DuitWidget::row("row", false, vec![widget1, widget2, widget3]);
+
+    // Конвертируем в JSON
+    let widget_json2: DuitJsonWidget = row.into();
+    let json2 = serde_json::to_string_pretty(&widget_json2).unwrap();
+    println!("{}", json2);
 }

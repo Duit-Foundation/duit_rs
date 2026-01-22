@@ -1,6 +1,6 @@
 use serde::{Serialize, Serializer};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum FontWeight {
     W100,
     W200,

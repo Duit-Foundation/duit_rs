@@ -1,3 +1,5 @@
-pub mod cow_trait;
+pub mod into_cow;
+pub mod value_ref;
 
-pub use cow_trait::IntoCow;
+pub use into_cow::IntoCow;
+pub use value_ref::ValueRef;

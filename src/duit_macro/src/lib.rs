@@ -1,22 +1,35 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Attribute, Fields, ItemStruct};
+use syn::{Attribute, Fields, ItemStruct, parse_macro_input};
 
-/// Атрибут макрос, который автоматически добавляет поле `refs: Vec<u8>` к структуре
-///
-/// Этот макрос генерирует новую структуру с добавленным полем `pub refs: Vec<u8>`
-/// и вспомогательными методами для работы с ним.
-///
-/// # Пример
-///
-/// ```rust
-/// #[with_refs]
-/// struct MyStruct {
-///     pub data: String,
-/// }
-///
-/// // После применения макроса структура будет иметь поле refs: Vec<u8>
-/// ```
+#[proc_macro_attribute]
+pub fn into_cow(_args: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as ItemStruct);
+    let name = &input.ident;
+
+    let generics = &input.generics;
+
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    let expanded = quote! {
+        #input
+
+        impl #impl_generics crate::core::IntoCow<'a, #name #ty_generics #where_clause> for &'a #name #ty_generics #where_clause {
+            fn into_cow(self) -> ::std::borrow::Cow<'a, #name #ty_generics> {
+                ::std::borrow::Cow::Borrowed(self)
+            }
+        }
+
+        impl #impl_generics crate::core::IntoCow<'a, #name #ty_generics #where_clause> for #name #ty_generics #where_clause {
+            fn into_cow(self) -> ::std::borrow::Cow<'a, #name #ty_generics> {
+                ::std::borrow::Cow::Owned(self)
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
 #[proc_macro_attribute]
 pub fn with_refs(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as ItemStruct);
