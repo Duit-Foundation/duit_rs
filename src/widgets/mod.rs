@@ -1,6 +1,9 @@
 pub mod json;
 pub mod widget;
-mod widget_impl;
+pub mod widget_impl;
+pub mod builder;
+pub mod component;
 
-pub use json::DuitJsonWidget;
 pub use widget::DuitWidget;
+pub use builder::DuitUIBuilder;
+pub use component::ComponentDescription;

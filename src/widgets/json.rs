@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::Serialize;
 
 use crate::{attributes, widgets::DuitWidget};
@@ -9,14 +11,14 @@ const ROW_TYPE_NAME: &str = "Row";
 /// Enum для представления различных типов атрибутов виджетов
 #[derive(Serialize, Clone)]
 #[serde(untagged)]
-pub enum WidgetAttributes<'a> {
-    Text(attributes::TextAttributes<'a>),
-    Container(attributes::ContainerAttributes<'a>),
+pub(crate) enum WidgetAttributes<'a> {
+    Text(Cow<'a, attributes::TextAttributes<'a>>),
+    Container(Cow<'a, attributes::ContainerAttributes<'a>>),
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DuitJsonWidget<'a> {
+pub(crate) struct DuitJsonWidget<'a> {
     #[serde(rename = "type")]
     pub type_name: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -40,7 +42,7 @@ impl<'a> From<DuitWidget<'a>> for DuitJsonWidget<'a> {
                 controlled,
             } => Self {
                 type_name: TEXT_TYPE_NAME,
-                attributes: Some(WidgetAttributes::Text(attributes.into_owned())),
+                attributes: Some(WidgetAttributes::Text(attributes)),
                 id: Some(id.to_string()),
                 controlled: Some(controlled),
                 child: None,
@@ -53,7 +55,7 @@ impl<'a> From<DuitWidget<'a>> for DuitJsonWidget<'a> {
                 child,
             } => Self {
                 type_name: CONTAINER_TYPE_NAME,
-                attributes: Some(WidgetAttributes::Container(attributes.into_owned())),
+                attributes: Some(WidgetAttributes::Container(attributes)),
                 id: Some(id.to_string()),
                 controlled: Some(controlled),
                 child: Some(Box::new((*child).into())),

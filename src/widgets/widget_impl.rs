@@ -4,23 +4,15 @@ use crate::attributes;
 use crate::{core::IntoCow, widgets::DuitWidget};
 
 impl<'a> DuitWidget<'a> {
-    pub fn text(id: &'a str, controlled: bool, attributes: impl IntoCow<'a, attributes::TextAttributes<'a>>) -> Self {
-        DuitWidget::Text {
-            id,
-            controlled,
-            attributes: attributes.into_cow(),
-        }
-    }
-
-    pub const fn c_text(
-        id: &'static str,
+    pub fn text(
+        id: &'a str,
         controlled: bool,
-        attributes: attributes::TextAttributes<'static>,
+        attributes: impl IntoCow<'a, attributes::TextAttributes<'a>>,
     ) -> Self {
         DuitWidget::Text {
             id,
             controlled,
-            attributes: Cow::Owned(attributes),
+            attributes: attributes.into_cow(),
         }
     }
 
